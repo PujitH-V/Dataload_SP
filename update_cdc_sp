@@ -1,0 +1,47 @@
+CREATE procedure PHV.sp_Update_CDC_Metdata_Manager
+(
+    @layer_id int,
+    @table_id int,
+    @table_reference_id int,
+    @cdc_start datetime,
+    @cdc_end datetime,
+    @pl_type VARCHAR(5)
+) AS
+BEGIN
+
+    DECLARE @v_layer_id int;
+    DECLARE @v_table_id int;
+    DECLARE @v_table_reference_id int;
+    DECLARE @v_cdc_start_ts datetime;
+    DECLARE @v_cdc_end_ts datetime;
+    --DECLARE @v_tmp_cdc_holder datetime;
+
+    
+
+    SET  @v_layer_id = @layer_id;
+    SET  @v_table_id = @table_id;
+    SET  @v_table_reference_id = @table_reference_id;
+    SET  @v_cdc_start_ts = @cdc_start;
+    SET  @v_cdc_end_ts = @cdc_end;
+
+    PRINT(@v_cdc_start_ts);
+    PRINT(@v_cdc_end_ts)
+
+    if (lower(@pl_type) = lower('Hist')) and (@v_cdc_start_ts = @v_cdc_end_ts)
+    BEGIN
+        update PHV.Metadata_Manager 
+        set table_old_cdc_timestamp = @v_cdc_start_ts,
+            table_new_updated_cdc_timestamp = @v_cdc_end_ts
+        where table_id = @v_table_id and layer_id = @v_layer_id and table_reference_id = @v_table_reference_id;
+    END
+
+    if (lower(@pl_type) = lower('Incr')) and (@v_cdc_start_ts < @v_cdc_end_ts)
+    BEGIN
+        --SET @v_tmp_cdc_holder = select table_new_updated_cdc_timestamp from PHV.Metadata_Manager where table_load_type = 'I' and active_Flag = 'Y' and table_id = @v_table_id;
+        update PHV.Metadata_Manager 
+        set table_old_cdc_timestamp = @v_cdc_start_ts,
+            table_new_updated_cdc_timestamp = @v_cdc_end_ts
+        where table_id = @v_table_id and layer_id = @v_layer_id and table_reference_id = @v_table_reference_id;
+    END
+    
+END
